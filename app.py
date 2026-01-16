@@ -27,7 +27,7 @@ from plotly.subplots import make_subplots
 
 st.set_page_config(
     page_title="Regression Analysis App",
-    page_icon="����",
+    page_icon="📊",
     layout="wide"
 )
 
@@ -64,7 +64,7 @@ def generate_synthetic_data(n_samples, noise_level, data_type, random_seed):
         y_true = 2 * X.flatten() + 1
 
     elif data_type == 'polynomial':
-        # Quadratic: y = 0.5x�� - 2x + 5
+        # Quadratic: y = 0.5x² - 2x + 5
         y_true = 0.5 * (X.flatten() ** 2) - 2 * X.flatten() + 5
 
     elif data_type == 'sinusoidal':
@@ -98,7 +98,7 @@ class LinearRegression:
         Initialize the model.
 
         Args:
-            learning_rate: Step size for gradient descent (��)
+            learning_rate: Step size for gradient descent (α)
             n_iterations: Number of training iterations
         """
         self.learning_rate = learning_rate
@@ -124,8 +124,8 @@ class LinearRegression:
         # Initialize bias to zero
         # Hint: Use np.random.randn() for weights
 
-        self.weights = None  # REPLACE THIS
-        self.bias = None     # REPLACE THIS
+        self.weights = np.random.randn(X.shape[1])
+        self.bias = 0
 
         # ==========================================
         # Training loop
@@ -138,7 +138,7 @@ class LinearRegression:
             # Forward pass: y_pred = X @ w + b
             # Hint: Use @ for matrix multiplication or np.dot()
 
-            y_pred = None  # REPLACE THIS
+            y_pred = X @ self.weights + self.bias
 
             # ==========================================
             # TODO 3: Compute loss (Mean Squared Error)
@@ -146,7 +146,7 @@ class LinearRegression:
             # MSE = (1/n) * sum((y - y_pred)^2)
             # Hint: Use np.mean() and ** 2
 
-            loss = None  # REPLACE THIS
+            loss = np.mean((y - y_pred) ** 2)
 
             # Store loss for visualization
             self.losses.append(loss)
@@ -158,8 +158,8 @@ class LinearRegression:
             # Gradient for bias: db = -(2/n) * sum(y - y_pred)
             # Hint: Remember to transpose X for dw calculation
 
-            dw = None  # REPLACE THIS
-            db = None  # REPLACE THIS
+            dw = -(2/n) * X.T @ (y - y_pred)
+            db = -(2/n) * sum(y - y_pred)
 
             # ==========================================
             # TODO 5: Update parameters
@@ -167,8 +167,8 @@ class LinearRegression:
             # Update rule: w = w - learning_rate * dw
             #              b = b - learning_rate * db
 
-            # WRITE YOUR CODE HERE
-            pass  # Remove this line after implementing
+            self.weights = self.weights - self.learning_rate * dw
+            self.bias = self.bias - self.learning_rate * db
 
             # Optional: Print progress every 100 iterations
             if iteration % 100 == 0:
@@ -189,7 +189,7 @@ class LinearRegression:
         # ==========================================
         # Same as in training: y_pred = X @ w + b
 
-        y_pred = None  # REPLACE THIS
+        y_pred = X @ self.weights + self.bias
         return y_pred
 
 
@@ -213,27 +213,29 @@ def compute_metrics(y_true, y_pred):
     # ==========================================
 
     # Mean Squared Error: MSE = (1/n) * sum((y - y_pred)^2)
-    mse = None  # REPLACE THIS
+    # np.mean is shorthand for (1/n) * sum(...)
+    mse = np.mean((y - y_pred) ** 2)
 
     # Root Mean Squared Error: RMSE = sqrt(MSE)
-    rmse = None  # REPLACE THIS
+    rmse = np.sqrt(mse)
 
     # Mean Absolute Error: MAE = (1/n) * sum(|y - y_pred|)
-    mae = None  # REPLACE THIS
+    mae = np.mean(np.abs(y - y_pred))
 
-    # R�� Score (Coefficient of Determination)
-    # R�� = 1 - (SS_res / SS_tot)
+    # R² Score (Coefficient of Determination)
+    # R² = 1 - (SS_res / SS_tot)
     # where SS_res = sum((y - y_pred)^2)
     #       SS_tot = sum((y - y_mean)^2)
-    ss_res = None  # REPLACE THIS
-    ss_tot = None  # REPLACE THIS
-    r2 = None      # REPLACE THIS
+    ss_res = np.sum(y - y_pred) ** 2)
+    y_mean = np.mean(y)
+    ss_tot = np.sum(y - y_mean) ** 2)
+    r2 = 1 - (ss_res / ss_tot)
 
     return {
         'MSE': mse,
         'RMSE': rmse,
         'MAE': mae,
-        'R��': r2
+        'R²': r2
     }
 
 
@@ -257,9 +259,12 @@ def plot_training_progress(losses):
 
     fig = go.Figure()
 
-    # Add line plot of losses
-    # Hint: Use go.Scatter with mode='lines'
-    # WRITE YOUR CODE HERE
+    fig.add_trace(go.Scatter(
+        x=list(range(len(losses))),  # iteration numbers
+        y=losses,                    # loss at each iteration
+        mode='lines',
+        name='Training Loss'
+    ))
 
     fig.update_layout(
         title='Training Progress: Loss vs Iteration',
@@ -293,18 +298,36 @@ def plot_predictions(X, y_true, y_pred, y_actual=None):
 
     # If actual values provided, plot them as scatter
     if y_actual is not None:
-        # Add scatter plot for actual observations
-        # Hint: Use go.Scatter with mode='markers'
-        # WRITE YOUR CODE HERE
-        pass
+        fig.add_trace(go.Scatter(
+        x=X.flatten(),
+        y=y_actual,
+        mode='markers',
+        name='Noisy Observations',
+        marker=dict(color='blue', size=6, opacity=0.6)
+    ))
 
-    # Add line for true function (if available)
     # Sort by X for proper line plotting
     sort_idx = np.argsort(X.flatten())
-    # WRITE YOUR CODE HERE
+    
+    # Scatter plot of true function
+    fig.add_trace(go.Scatter(
+        x=X.flatten()[sort_idx],
+        y=y_true[sort_idx],
+        mode='lines',
+        name='True Function',
+        line=dict(color='red', width=2)
+    ))
+    
+    
+    # Scatter plot of predictions
+    fig.add_trace(go.Scatter(
+        x=X.flatten()[sort_idx],
+        y=y_pred[sort_idx],
+        mode='lines',
+        name='Predictions',
+        line=dict(color='green', width=2, dash='dash')
+    ))
 
-    # Add line for predictions
-    # WRITE YOUR CODE HERE
 
     fig.update_layout(
         title='Model Predictions vs Actual Data',
@@ -336,13 +359,14 @@ def plot_residuals(y_true, y_pred):
 
     fig = go.Figure()
 
-    # Add scatter plot of residuals vs predictions
-    # Hint: Use go.Scatter with mode='markers'
-    # WRITE YOUR CODE HERE
-
-    # Add horizontal line at y=0
-    # Hint: Use fig.add_hline()
-    # WRITE YOUR CODE HERE
+    # Scatter plot of residuals vs predicted values
+    fig.add_trace(go.Scatter(
+        x=y_pred,
+        y=residuals,
+        mode='markers',
+        name='Residuals',
+    marker=dict(color='blue', size=6, opacity=0.6)
+    ))
 
     fig.update_layout(
         title='Residual Plot: Check for Patterns',
@@ -363,7 +387,7 @@ def main():
     """Main application function."""
 
     # Title and description
-    st.title("���� Linear Regression with Gradient Descent")
+    st.title("📊 Linear Regression with Gradient Descent")
     st.markdown("""
     This app demonstrates linear regression using gradient descent.
 
@@ -380,7 +404,7 @@ def main():
     # SIDEBAR - Data Generation Parameters
     # ==========================================
 
-    st.sidebar.header("���� Data Generation")
+    st.sidebar.header("📊 Data Generation")
 
     n_samples = st.sidebar.slider(
         "Number of Samples",
@@ -415,7 +439,7 @@ def main():
     )
 
     # Generate data button
-    if st.sidebar.button("���� Generate Data", type="primary"):
+    if st.sidebar.button("🎲 Generate Data", type="primary"):
         X, y, y_true = generate_synthetic_data(
             n_samples, noise_level, data_type, random_seed
         )
@@ -426,7 +450,7 @@ def main():
         st.session_state.y_true = y_true
         st.session_state.data_generated = True
 
-        st.sidebar.success("��� Data generated!")
+        st.sidebar.success("ℹ️ Data generated!")
 
     st.sidebar.divider()
 
@@ -434,10 +458,10 @@ def main():
     # SIDEBAR - Model Parameters
     # ==========================================
 
-    st.sidebar.header("���� Model Parameters")
+    st.sidebar.header("🎛️ Model Parameters")
 
     learning_rate = st.sidebar.slider(
-        "Learning Rate (��)",
+        "Learning Rate (α)",
         min_value=0.0001,
         max_value=0.1,
         value=0.01,
@@ -461,7 +485,7 @@ def main():
 
     # Check if data has been generated
     if 'data_generated' not in st.session_state:
-        st.info("���� Start by generating data using the sidebar controls")
+        st.info("ℹ️ Start by generating data using the sidebar controls")
         st.stop()
 
     # Get data from session state
@@ -481,7 +505,7 @@ def main():
     st.divider()
 
     # Train model button
-    if st.button("���� Train Model", type="primary"):
+    if st.button("⚙️ Train Model", type="primary"):
 
         with st.spinner("Training model... This may take a moment."):
 
@@ -506,11 +530,11 @@ def main():
             st.session_state.metrics = metrics
             st.session_state.model_trained = True
 
-        st.success("��� Model trained successfully!")
+        st.success("ℹ️ Model trained successfully!")
 
     # Check if model has been trained
     if 'model_trained' not in st.session_state:
-        st.info("���� Click 'Train Model' to train the regression model")
+        st.info("ℹ️ Click 'Train Model' to train the regression model")
         st.stop()
 
     # Get trained model and results
@@ -523,10 +547,10 @@ def main():
     # ==========================================
 
     tab1, tab2, tab3, tab4 = st.tabs([
-        "���� Training Progress",
-        "���� Predictions",
-        "���� Residuals",
-        "���� Metrics"
+        "📊 Training Progress",
+        "📈 Predictions",
+        "📉 Residuals",
+        "📋 Metrics"
     ])
 
     # Tab 1: Training Progress
@@ -600,18 +624,18 @@ def main():
                 help="Average absolute error. More robust to outliers."
             )
             st.metric(
-                "R�� Score",
-                f"{metrics['R��']:.4f}",
+                "R² Score",
+                f"{metrics['R²']:.4f}",
                 help="1 = perfect fit, 0 = no better than mean"
             )
 
         # Metric explanations
-        with st.expander("���� Understanding Metrics"):
+        with st.expander("📚 Understanding Metrics"):
             st.markdown("""
             **MSE (Mean Squared Error)**
             - Measures average squared difference between predictions and actual values
             - Penalizes large errors more heavily
-            - Formula: `MSE = (1/n) ��(y - ��)��`
+            - Formula: `MSE = (1/n) Σ(y - ŷ)²`
 
             **RMSE (Root Mean Squared Error)**
             - Square root of MSE
@@ -621,9 +645,9 @@ def main():
             **MAE (Mean Absolute Error)**
             - Average absolute difference
             - Less sensitive to outliers than MSE
-            - Formula: `MAE = (1/n) ��|y - ��|`
+            - Formula: `MAE = (1/n) Σ|y - ŷ|`
 
-            **R�� Score (Coefficient of Determination)**
+            **R² Score (Coefficient of Determination)**
             - Proportion of variance explained by the model
             - 1.0 = perfect predictions
             - 0.0 = predictions no better than the mean
@@ -636,7 +660,7 @@ def main():
     # DATA EXPORT
     # ==========================================
 
-    st.subheader("���� Export Results")
+    st.subheader("💾 Export Results")
 
     # Create results DataFrame
     results_df = pd.DataFrame({
@@ -649,7 +673,7 @@ def main():
     # Download button
     csv = results_df.to_csv(index=False)
     st.download_button(
-        label="���� Download Results (CSV)",
+        label="📥 Download Results (CSV)",
         data=csv,
         file_name="regression_results.csv",
         mime="text/csv"
