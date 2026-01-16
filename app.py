@@ -124,7 +124,7 @@ class LinearRegression:
         # Initialize bias to zero
         # Hint: Use np.random.randn() for weights
 
-        self.weights = np.random.randn(X.shape[1])
+        self.weights = np.random.randn(n_features) * 0.01 # for small random values
         self.bias = 0
 
         # ==========================================
@@ -158,11 +158,11 @@ class LinearRegression:
             # Gradient for bias: db = -(2/n) * sum(y - y_pred)
             # Hint: Remember to transpose X for dw calculation
             
-            n = X.shape[0]  # number of rows = number of samples
+            n = n_samples  # number of rows = number of samples
 
             # Gradients
             dw = -(2/n) * X.T @ (y - y_pred)
-            db = -(2/n) * sum(y - y_pred)
+            db = -(2/n) * np.sum(y - y_pred)
 
             # ==========================================
             # TODO 5: Update parameters
@@ -217,21 +217,21 @@ def compute_metrics(y_true, y_pred):
 
     # Mean Squared Error: MSE = (1/n) * sum((y - y_pred)^2)
     # np.mean is shorthand for (1/n) * sum(...)
-    mse = np.mean((y - y_pred) ** 2)
+    mse = np.mean((y_true - y_pred) ** 2)
 
     # Root Mean Squared Error: RMSE = sqrt(MSE)
     rmse = np.sqrt(mse)
 
     # Mean Absolute Error: MAE = (1/n) * sum(|y - y_pred|)
-    mae = np.mean(np.abs(y - y_pred))
+    mae = np.mean(np.abs(y_true - y_pred))
 
     # R² Score (Coefficient of Determination)
     # R² = 1 - (SS_res / SS_tot)
     # where SS_res = sum((y - y_pred)^2)
     #       SS_tot = sum((y - y_mean)^2)
-    ss_res = np.sum((y - y_pred) ** 2)
-    y_mean = np.mean(y)
-    ss_tot = np.sum((y - y_mean) ** 2)
+    ss_res = np.sum((y_true - y_pred) ** 2)
+    y_mean = np.mean(y_true)
+    ss_tot = np.sum((y_true - y_mean) ** 2)
     r2 = 1 - (ss_res / ss_tot)
 
     return {
