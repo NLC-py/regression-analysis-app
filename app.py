@@ -226,9 +226,9 @@ def compute_metrics(y_true, y_pred):
     # R² = 1 - (SS_res / SS_tot)
     # where SS_res = sum((y - y_pred)^2)
     #       SS_tot = sum((y - y_mean)^2)
-    ss_res = np.sum(y - y_pred) ** 2)
+    ss_res = np.sum((y - y_pred) ** 2)
     y_mean = np.mean(y)
-    ss_tot = np.sum(y - y_mean) ** 2)
+    ss_tot = np.sum((y - y_mean) ** 2)
     r2 = 1 - (ss_res / ss_tot)
 
     return {
