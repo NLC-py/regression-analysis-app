@@ -157,7 +157,10 @@ class LinearRegression:
             # Gradient for weights: dw = -(2/n) * X.T @ (y - y_pred)
             # Gradient for bias: db = -(2/n) * sum(y - y_pred)
             # Hint: Remember to transpose X for dw calculation
+            
+            n = X.shape[0]  # number of rows = number of samples
 
+            # Gradients
             dw = -(2/n) * X.T @ (y - y_pred)
             db = -(2/n) * sum(y - y_pred)
 
